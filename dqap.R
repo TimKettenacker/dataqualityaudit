@@ -1,45 +1,17 @@
----
-title: "Data Quality Audit"
-author: "Tim Kettenacker"
-date: "`r Sys.Date()`"
-output: 
-  ioslides_presentation
----
-
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE)
-```
-
-# Data Tidying
-## Raw Data {.smaller}
+## this file contains only the code and is stripped from the documentation
+## render .rmd file to ioslides in RStudio to present cntent the customer
 
 
-```{r, message=FALSE, warning=FALSE}
+# first chunk: data preparation
 raw <- read.csv("dqaudit_testset.csv", sep=";", na.strings = "", colClasses = c("X_Koordinate"="character", "Y_Koordinate"="character", "PLZ"="character", "POST_Postleitzahl"="character", "Ergebnisklasse_der_Zustelladresse"="character"), fileEncoding = "UTF-8")
-```
-- <font size="3"> We received one extract from your SAP production system (in total <b> `r length(raw[,1])` </b> records).</font> 
-- <font size="3">Columns considered for postal validation are <b> `r colnames(raw[10:12])`. </b></font>
-- <font size="3">The columns used for deduplication are <b> `r colnames(raw[8:12])`. </b></font> 
-- <font size="3">The total amount of data processed by postal validation and identity is <b> `r length(raw[,1])` </b></font> 
 
-<font size="3">Let's delve into a few special cases that have been discovered during the analysis of the raw input data:</font>
-
-```{r, message = FALSE, warning = FALSE}
-
+# second chunk: data preparation
 require(DT)
 
 raw <- read.csv("dqaudit_testset.csv", sep=";", na.strings = "", colClasses = c("X_Koordinate"="character", "Y_Koordinate"="character", "PLZ"="character", "POST_Postleitzahl"="character", "Ergebnisklasse_der_Zustelladresse"="character"), fileEncoding = "UTF-8")
 datatable(raw[c(8333:8336, 9933:9940, 111:113),9:12], options = list(pageLength = 5))
 
-```
-
-## Data Preparation {.smaller}
-
-<font size="3">The completeness of column content is relevant for the outcome of postal validation and matching.</font>
-
-
-```{r, message=FALSE, warning=FALSE}
-
+# third chunk: data preparation 
 require(plotly)
 require(ggplot2)
 require(ggthemes)
@@ -66,17 +38,14 @@ empties.df = ddply(e_fields, .(column), transform, percent = freq/sum(freq) * 10
 empties.df = ddply(empties.df, .(column), transform, pos = (cumsum(freq) - 0.5 * freq))
 empties.df$label = paste0(sprintf("%.0f", empties.df$percent), "%")
 g1 <- ggplot(empties.df, aes(x = column, y = freq, fill = x)) +
-    geom_bar(stat = "identity", width = .6) + ggtitle("Column filling ratio") +
-    geom_text(aes(y = pos, label = label), size = 3) +
-    coord_flip() + theme_solarized_2() + scale_fill_manual(values=c("#8b7765", "#E69F00")) + theme(legend.position = "none", axis.title.x=element_blank(), axis.title.y=element_blank())
+  geom_bar(stat = "identity", width = .6) + ggtitle("Column filling ratio") +
+  geom_text(aes(y = pos, label = label), size = 3) +
+  coord_flip() + theme_solarized_2() + scale_fill_manual(values=c("#8b7765", "#E69F00")) + theme(legend.position = "none", axis.title.x=element_blank(), axis.title.y=element_blank())
 ggplotly(g1, tooltip = c("x", "y"))
-```
 
-# Postal Validation
 
-## Where is your customer located?
+# 4th chunk: postal validation
 
-```{r, message=FALSE, warning=FALSE}
 require(sp)
 require(leaflet)
 
@@ -90,10 +59,10 @@ colnames(raw)[colnames(raw)=="X_Koordinate"] <- "longitude"
 ## do some data wrangling and cleanups to bring data to spatial format
 # add dot
 for(c in 1:length(raw$latitude)){
-    raw$latitude[c] <- sub("([[:digit:]]{2,5})$", ".\\1", raw$latitude[c])
-  }
+  raw$latitude[c] <- sub("([[:digit:]]{2,5})$", ".\\1", raw$latitude[c])
+}
 for(c in 1:length(raw$longitude)){
-    raw$longitude[c] <- sub("([[:digit:]]{2,5})$", ".\\1", raw$longitude[c])
+  raw$longitude[c] <- sub("([[:digit:]]{2,5})$", ".\\1", raw$longitude[c])
 }
 raw$latitude <- as.numeric(raw$latitude)
 raw$longitude <- as.numeric(raw$longitude)
@@ -111,18 +80,15 @@ popup <- paste0(      "<center>", "<b>",
                       raw$POST_Postleitzahl, " ",
                       raw$POST_Ort,
                       "</center>")
-                      
-                      
+
+
 leaflet(raw) %>% addTiles() %>% addMarkers(
-    popup = popup,
-    clusterOptions = markerClusterOptions()
+  popup = popup,
+  clusterOptions = markerClusterOptions()
 ) 
 
-```
 
-## Can you reach your customer?
-
-```{r, message=FALSE, warning=FALSE}
+# 5th chunk: postal validation
 require(sp)
 require(leaflet)
 
@@ -136,10 +102,10 @@ colnames(raw)[colnames(raw)=="X_Koordinate"] <- "longitude"
 ## do some data wrangling and cleanups to bring data to spatial format
 # add dot
 for(c in 1:length(raw$latitude)){
-    raw$latitude[c] <- sub("([[:digit:]]{2,5})$", ".\\1", raw$latitude[c])
-  }
+  raw$latitude[c] <- sub("([[:digit:]]{2,5})$", ".\\1", raw$latitude[c])
+}
 for(c in 1:length(raw$longitude)){
-    raw$longitude[c] <- sub("([[:digit:]]{2,5})$", ".\\1", raw$longitude[c])
+  raw$longitude[c] <- sub("([[:digit:]]{2,5})$", ".\\1", raw$longitude[c])
 }
 raw$latitude <- as.numeric(raw$latitude)
 raw$longitude <- as.numeric(raw$longitude)
@@ -172,46 +138,42 @@ rescl3 <- rescl[rescl$Ergebnisklasse_der_Zustelladresse == 3,]
 rescl3 <- SpatialPointsDataFrame(SpatialPoints(cbind(rescl3$longitude, rescl3$latitude)), rescl3)
 
 cl1popup <- paste0(  "<center>", "<strong>", " Original: ", "</strong>", 
-                      rescl1$STRASSE, ", ", rescl1$PLZ, ", ", rescl1$STADT, "</center>",  
-                      "<center>", "<strong>", " Validated: " ,"</strong>",
-                      rescl1$POST_Strasse_und_Hausnummer, ", ", rescl1$POST_Postleitzahl, ", ", 
-                      rescl1$POST_Ort, "</center>",
+                     rescl1$STRASSE, ", ", rescl1$PLZ, ", ", rescl1$STADT, "</center>",  
+                     "<center>", "<strong>", " Validated: " ,"</strong>",
+                     rescl1$POST_Strasse_und_Hausnummer, ", ", rescl1$POST_Postleitzahl, ", ", 
+                     rescl1$POST_Ort, "</center>",
                      "<center>", "<small>", "<em>", rescl1$Veraenderung_Strassenname, "</em>",                        "</small>","<center>",
                      "<center>", "<small>", "<em>", rescl1$Veraenderung_Hausnummer, "</em>",                          "</small>","<center>",
                      "<center>", "<small>", "<em>", rescl1$Veraenderung_Postleitzahl, "</em>",                        "</small>","<center>",
                      "<center>", "<small>", "<em>", rescl1$Veraenderung_Ortsname, "</em>",                            "</small>","<center>")
 
 cl2popup <- paste0(  "<center>", "<strong>", " Original: ", "</strong>", 
-                      rescl2$STRASSE, ", ", rescl2$PLZ, ", ", rescl2$STADT, "</center>",  
-                      "<center>", "<strong>", " Output: " ,"</strong>",
-                      rescl2$POST_Strasse_und_Hausnummer, ", ", rescl2$POST_Postleitzahl, ", ", 
-                      rescl2$POST_Ort, "</center>",
+                     rescl2$STRASSE, ", ", rescl2$PLZ, ", ", rescl2$STADT, "</center>",  
+                     "<center>", "<strong>", " Output: " ,"</strong>",
+                     rescl2$POST_Strasse_und_Hausnummer, ", ", rescl2$POST_Postleitzahl, ", ", 
+                     rescl2$POST_Ort, "</center>",
                      "<center>", "<small>", "<em>", rescl2$Veraenderung_Strassenname, "</em>",                        "</small>","<center>",
                      "<center>", "<small>", "<em>", rescl2$Veraenderung_Hausnummer, "</em>",                          "</small>","<center>",
                      "<center>", "<small>", "<em>", rescl2$Veraenderung_Postleitzahl, "</em>",                        "</small>","<center>",
                      "<center>", "<small>", "<em>", rescl2$Veraenderung_Ortsname, "</em>",                            "</small>","<center>")
 
 cl3popup <- paste0(  "<center>", "<strong>", " Original: ", "</strong>", 
-                      rescl3$STRASSE, ", ", rescl3$PLZ, ", ", rescl3$STADT, "</center>",  
-                      "<center>", "<strong>", " Validated: " ,"</strong>",
-                      rescl3$POST_Strasse_und_Hausnummer, ", ", rescl3$POST_Postleitzahl, ", ", 
-                      rescl3$POST_Ort, "</center>",
+                     rescl3$STRASSE, ", ", rescl3$PLZ, ", ", rescl3$STADT, "</center>",  
+                     "<center>", "<strong>", " Validated: " ,"</strong>",
+                     rescl3$POST_Strasse_und_Hausnummer, ", ", rescl3$POST_Postleitzahl, ", ", 
+                     rescl3$POST_Ort, "</center>",
                      "<center>", "<small>", "<em>", rescl3$Veraenderung_Strassenname, "</em>",                        "</small>","<center>",
                      "<center>", "<small>", "<em>", rescl3$Veraenderung_Hausnummer, "</em>",                          "</small>","<center>",
                      "<center>", "<small>", "<em>", rescl3$Veraenderung_Postleitzahl, "</em>",                        "</small>","<center>",
                      "<center>", "<small>", "<em>", rescl3$Veraenderung_Ortsname, "</em>",                            "</small>", "<center>")
 
 leaflet() %>% addTiles() %>%
-    addCircleMarkers(data = rescl1, popup = cl1popup, group = "Class 1", radius = 6, color = "#f9d62e", opacity = 0.37, fillOpacity = 0.35) %>%
-    addCircleMarkers(data = rescl2, popup = cl2popup, group = "Class 2", radius = 6, color = "#fc913a", opacity = 0.37, fillOpacity = 0.35) %>%
-    addCircleMarkers(data = rescl3, popup = cl3popup, group = "Class 3", radius = 6, color = "#ff4e50", opacity = 0.37, fillOpacity = 0.35) %>%
-    addLayersControl(overlayGroups = c("Class 1", "Class 2", "Class 3"), position = "topright", options = layersControlOptions(collapsed = TRUE))
+  addCircleMarkers(data = rescl1, popup = cl1popup, group = "Class 1", radius = 6, color = "#f9d62e", opacity = 0.37, fillOpacity = 0.35) %>%
+  addCircleMarkers(data = rescl2, popup = cl2popup, group = "Class 2", radius = 6, color = "#fc913a", opacity = 0.37, fillOpacity = 0.35) %>%
+  addCircleMarkers(data = rescl3, popup = cl3popup, group = "Class 3", radius = 6, color = "#ff4e50", opacity = 0.37, fillOpacity = 0.35) %>%
+  addLayersControl(overlayGroups = c("Class 1", "Class 2", "Class 3"), position = "topright", options = layersControlOptions(collapsed = TRUE))
 
-```
-
-## Distribution of result classes {.smaller}
-
-```{r, message=FALSE, warning=FALSE}
+# sixth chunk: postal validation
 require(ggplot2)
 require(ggthemes)
 require(plotly)
@@ -221,16 +183,19 @@ colnames(raw)[colnames(raw)=="Ergebnisklasse_der_Zustelladresse"] <- "Result Cla
 g <- ggplot(data=raw) + geom_bar(aes(x = `Result Class`), fill = "#191970", color = "#191970") + labs(title = "Frequency of result classes", x = "result class", y = "Frequency")
 ggplotly(g + theme_minimal())
 
-```
 
-<font size="3">Result class 4 means the address is ambiguous, result class 5 means the address could not be found.</font>
+# seventh chunk: postal validation
+require(ggplot2)
+require(ggthemes)
+require(plotly)
+
+raw <- read.csv("dqaudit_testset.csv", sep=";", na.strings = "", colClasses = c("X_Koordinate"="character", "Y_Koordinate"="character", "PLZ"="character", "POST_Postleitzahl"="character", "Ergebnisklasse_der_Zustelladresse"="character"), fileEncoding = "UTF-8")
+colnames(raw)[colnames(raw)=="Ergebnisklasse_der_Zustelladresse"] <- "Result Class"
+g <- ggplot(data=raw) + geom_bar(aes(x = `Result Class`), fill = "#191970", color = "#191970") + labs(title = "Frequency of result classes", x = "result class", y = "Frequency")
+ggplotly(g + theme_minimal())
 
 
-# Matching
-
-## Do you know your customer?
-
-```{r, message=FALSE, warning=FALSE}
+# 8th chunk: matching
 require(sp)
 require(leaflet)
 require(plyr)
@@ -245,10 +210,10 @@ colnames(raw)[colnames(raw)=="X_Koordinate"] <- "longitude"
 ## do some data wrangling and cleanups to bring data to spatial format
 # add dot
 for(c in 1:length(raw$latitude)){
-    raw$latitude[c] <- sub("([[:digit:]]{2,5})$", ".\\1", raw$latitude[c])
-  }
+  raw$latitude[c] <- sub("([[:digit:]]{2,5})$", ".\\1", raw$latitude[c])
+}
 for(c in 1:length(raw$longitude)){
-    raw$longitude[c] <- sub("([[:digit:]]{2,5})$", ".\\1", raw$longitude[c])
+  raw$longitude[c] <- sub("([[:digit:]]{2,5})$", ".\\1", raw$longitude[c])
 }
 raw$latitude <- as.numeric(raw$latitude)
 raw$longitude <- as.numeric(raw$longitude)
@@ -276,25 +241,16 @@ for(i in df.head_duplicates$SRC_mail2Group){
 sp.duplicates <- SpatialPointsDataFrame(SpatialPoints(cbind(df.head_duplicates$longitude, df.head_duplicates$latitude)), df.head_duplicates)
 
 dupop <- paste0(  "<center>", "<strong>", " Duplicates: ", "</strong>", 
-                      sp.duplicates$VORNAME, " ", sp.duplicates$NAME, "</center>",  
-                      "<center>", sp.duplicates$POST_Strasse_und_Hausnummer, ", ",
-                      sp.duplicates$POST_Postleitzahl, ", ", 
-                      sp.duplicates$POST_Ort, "</center>")
+                  sp.duplicates$VORNAME, " ", sp.duplicates$NAME, "</center>",  
+                  "<center>", sp.duplicates$POST_Strasse_und_Hausnummer, ", ",
+                  sp.duplicates$POST_Postleitzahl, ", ", 
+                  sp.duplicates$POST_Ort, "</center>")
 
 leaflet(sp.duplicates) %>% addTiles() %>%
-    addCircles(radius = ~CountMatchGroupFrequency * 1000, popup = dupop, color = "#c51b45", fillOpacity = 0.8)
-
-```
-
-<font size="3">Red dots indicate duplicate groups. The bigger the dot, the bigger the group.</font>
+  addCircles(radius = ~CountMatchGroupFrequency * 1000, popup = dupop, color = "#c51b45", fillOpacity = 0.8)
 
 
-
-## Frequency of duplicates
-
-<p align="right">Uniservs matching engine is able to execute a pairwise record comparison based on an underlying, configurable ruleset. The outcome of the matching results in so-called cleans and duplicates.</p>
-
-```{r, message=FALSE, warning=FALSE, fig.width=5, fig.height=5}
+# 9th chunk: matching
 
 require(plotly)
 require(plyr)
@@ -307,14 +263,8 @@ p <- count(raw$SRC_mail2Stat)
 p["x"] <- c("Singles", "Head duplicates", "duplicates")
 plot_ly(p, labels = x, values = freq, type = "pie")
 
-```
 
-
-## Distribution of duplicate groups
-
-```{r, message=FALSE, warning=FALSE}
-
-## as a standard: use raw file to look at deduplication results
+# 10th chunk: matching
 
 require(plotly)
 require(plyr)
@@ -327,13 +277,3 @@ colnames(t)[colnames(t)=="Freq"] <- "# of duplicates per group"
 g <- ggplot(data=t, aes(`# of duplicates per group`)) + geom_histogram(aes(fill=..count..), alpha = 0.75, binwidth = 1) + labs(title = "Frequency of duplicate groups", x = "Number of duplicates per duplicate group", y = "Frequency")
 g <- g + theme_hc()
 ggplotly(g, tooltip = c("x", "count"))
-
-```
-
-# Summary
-
-## Recommendations
-
-- <font size="3">Your data is in decent / mediocre / bad shape.</font>
-- <font size="3">Almost 15 % of your postal activities do not reach the intended recipient.</font>
-- <font size="3">We can help you by ...</font>
