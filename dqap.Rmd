@@ -68,8 +68,10 @@ empties.df$label = paste0(sprintf("%.0f", empties.df$percent), "%")
 g1 <- ggplot(empties.df, aes(x = column, y = freq, fill = x)) +
     geom_bar(stat = "identity", width = .6) + ggtitle("Column filling ratio") +
     geom_text(aes(y = pos, label = label), size = 3) +
-    coord_flip() + theme_solarized_2() + scale_fill_manual(values=c("#8b7765", "#E69F00")) + theme(legend.position = "none", axis.title.x=element_blank(), axis.title.y=element_blank())
-ggplotly(g1, tooltip = c("x", "y"))
+    coord_flip() + theme_solarized() + scale_fill_manual(values=c("#8b7765", "#E69F00")) + theme(legend.position = "none", axis.title.x=element_blank(), axis.title.y=element_blank())
+g1
+# ggplotly(g1, tooltip = c("x", "y"))
+# no interactive version as of September 2017, ggplotly() is currently being rewritten!
 ```
 
 # Postal Validation
@@ -305,7 +307,7 @@ raw <- read.csv("dqaudit_testset.csv", sep=";", na.strings = "", colClasses = c(
 
 p <- count(raw$SRC_mail2Stat)
 p["x"] <- c("Singles", "Head duplicates", "duplicates")
-plot_ly(p, labels = x, values = freq, type = "pie")
+plot_ly(p, labels = p$x, values = p$freq, type = "pie")
 
 ```
 
